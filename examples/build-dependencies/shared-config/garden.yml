@@ -2,3 +2,5 @@ kind: Module
 name: shared-config
 type: exec
 description: A simple module that holds shared config that's consumed by other modules.
+env:
+  FOO: ${local.env.TEST_VAR}

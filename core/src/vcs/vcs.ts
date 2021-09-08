@@ -48,8 +48,16 @@ export interface TreeVersions {
 
 export interface ModuleVersion {
   versionString: string
-  dependencyVersions: TreeVersions
+  dependencyVersions: ModuleVersions
   files: string[]
+}
+
+export interface NamedModuleVersion extends ModuleVersion {
+  name: string
+}
+
+export interface ModuleVersions {
+  [moduleName: string]: ModuleVersion
 }
 
 interface NamedTreeVersion extends TreeVersion {
@@ -164,36 +172,36 @@ export abstract class VcsHandler {
     return fileVersion || (await this.getTreeVersion(log, projectName, moduleConfig))
   }
 
-  async resolveModuleVersion(
-    log: LogEntry,
-    projectName: string,
-    moduleConfig: ModuleConfig,
-    dependencies: ModuleConfig[]
-  ): Promise<ModuleVersion> {
-    const treeVersion = await this.resolveTreeVersion(log, projectName, moduleConfig)
+  // async resolveModuleVersion(
+  //   log: LogEntry,
+  //   projectName: string,
+  //   moduleConfig: ModuleConfig,
+  //   dependencies: ModuleConfig[]
+  // ): Promise<ModuleVersion> {
+  //   const treeVersion = await this.resolveTreeVersion(log, projectName, moduleConfig)
 
-    validateSchema(treeVersion, treeVersionSchema(), {
-      context: `${this.name} tree version for module at ${moduleConfig.path}`,
-    })
+  //   validateSchema(treeVersion, treeVersionSchema(), {
+  //     context: `${this.name} tree version for module at ${moduleConfig.path}`,
+  //   })
 
-    const namedDependencyVersions = await Bluebird.map(dependencies, async (m: ModuleConfig) => ({
-      name: m.name,
-      ...(await this.resolveTreeVersion(log, projectName, m)),
-    }))
-    const dependencyVersions = mapValues(keyBy(namedDependencyVersions, "name"), (v) => omit(v, "name"))
+  //   const namedDependencyVersions = await Bluebird.map(dependencies, async (m: ModuleConfig) => ({
+  //     name: m.name,
+  //     ...(await this.resolveTreeVersion(log, projectName, m)),
+  //   }))
+  //   const dependencyVersions = mapValues(keyBy(namedDependencyVersions, "name"), (v) => omit(v, "name"))
 
-    const versionString = getModuleVersionString(
-      moduleConfig,
-      { name: moduleConfig.name, ...treeVersion },
-      namedDependencyVersions
-    )
+  //   const versionString = getModuleVersionString(
+  //     moduleConfig,
+  //     { name: moduleConfig.name, ...treeVersion },
+  //     namedDependencyVersions
+  //   )
 
-    return {
-      dependencyVersions,
-      versionString,
-      files: treeVersion.files,
-    }
-  }
+  //   return {
+  //     dependencyVersions,
+  //     versionString,
+  //     files: treeVersion.files,
+  //   }
+  // }
 
   getRemoteSourcesDirname(type: ExternalSourceType) {
     return getRemoteSourcesDirname(type)
@@ -268,10 +276,16 @@ export async function writeModuleVersionFile(path: string, version: ModuleVersio
 export function getModuleVersionString(
   moduleConfig: ModuleConfig,
   treeVersion: NamedTreeVersion,
-  dependencyTreeVersions: NamedTreeVersion[]
+  dependencyModuleVersions: NamedModuleVersion[]
 ) {
+  // console.log("######")
+  // console.log(`getModuleVersionString called with`)
+  // console.log(`moduleConfig: ${JSON.stringify(moduleConfig, null, 2)}`)
+  // console.log(`treeVersion: ${JSON.stringify(treeVersion, null, 2)}`)
+  // console.log(`dependencyModuleVersions: ${JSON.stringify(dependencyModuleVersions, null, 2)}`)
+  // console.log("######")
   // TODO: allow overriding the prefix
-  return `${versionStringPrefix}${hashModuleVersion(moduleConfig, treeVersion, dependencyTreeVersions)}`
+  return `${versionStringPrefix}${hashModuleVersion(moduleConfig, treeVersion, dependencyModuleVersions)}`
 }
 
 /**
@@ -281,7 +295,7 @@ export function getModuleVersionString(
 export function hashModuleVersion(
   moduleConfig: ModuleConfig,
   treeVersion: NamedTreeVersion,
-  dependencyTreeVersions: NamedTreeVersion[]
+  dependencyModuleVersions: NamedModuleVersion[]
 ) {
   // If a build config is provided, we use that.
   // Otherwise, we use the full module config, omitting the configPath, path, and outputs fields, as well as individual
@@ -289,13 +303,41 @@ export function hashModuleVersion(
   // build output.
   const configToHash =
     moduleConfig.buildConfig ||
-    omit(moduleConfig, ["configPath", "path", "outputs", "serviceConfigs", "taskConfigs", "testConfigs"])
+    omit(moduleConfig, [
+      "configPath",
+      "path",
+      "outputs",
+      "serviceConfigs",
+      "taskConfigs",
+      "testConfigs",
+
+      "spec",
+      "buildPath",
+      "buildMetadataPath",
+      "needsBuild",
+      "version",
+      "buildDependencies",
+      "outputs",
+      "serviceNames",
+      "serviceDependencyNames",
+      "taskNames",
+      "taskDependencyNames",
+      "variables",
+      "compatibleTypes",
+      "_config",
+    ])
+
+  // console.log(`configToHash: ${JSON.stringify(configToHash, null, 2)}`)
 
   const configString = serializeConfig(configToHash)
 
-  const versionStrings = sortBy([treeVersion, ...dependencyTreeVersions], "name").map(
-    (v) => `${v.name}_${v.contentHash}`
-  )
+  const versionStrings = sortBy(
+    [[treeVersion.name, treeVersion.contentHash], ...dependencyModuleVersions.map((v) => [v.name, v.versionString])],
+    (vs) => vs[0]
+  ).map((vs) => vs[1])
+  // const versionStrings = sortBy([treeVersion, ...dependencyModuleVersions], "name").map(
+  //   (v) => `${v.name}_${v.contentHash}`
+  // )
 
   return hashStrings([configString, ...versionStrings])
 }

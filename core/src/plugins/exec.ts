@@ -203,7 +203,10 @@ export const execModuleSpecSchema = () =>
           `
         )
         .default(false),
+      // Add build.env that extends `defaultEnv`
       build: execBuildSpecSchema(),
+      // TODO-DODDI: Add docstring and deprecate `env` field
+      // add a `defaultEnv` field to use instead
       env: joiEnvVars(),
       services: joiSparseArray(execServiceSchema()).description("A list of services to deploy from this module."),
       tasks: joiSparseArray(execTaskSpecSchema()).description("A list of tasks that can be run in this module."),
@@ -246,7 +249,8 @@ export async function configureExecModule({
     projectRoot: ctx.projectRoot,
   })
 
-  moduleConfig.buildConfig = omit(moduleConfig.spec, ["tasks", "tests"])
+  // All the config keys that affect the build version
+  moduleConfig.buildConfig = omit(moduleConfig.spec, ["tasks", "tests", "services"])
 
   moduleConfig.serviceConfigs = moduleConfig.spec.services.map((s) => ({
     name: s.name,
