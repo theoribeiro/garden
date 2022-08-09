@@ -41,6 +41,8 @@ manifests:
       namespace: local-mode-k8s-default
       labels:
         app: backend
+      annotations:
+        kubectl.kubernetes.io/default-container: "backend"
     spec:
       selector:
         matchLabels:

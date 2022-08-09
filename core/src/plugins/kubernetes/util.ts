@@ -249,8 +249,12 @@ export async function execInWorkload({
 }) {
   const api = await KubeApi.factory(log, ctx, provider)
   const pods = await getCurrentWorkloadPods(api, namespace, workload)
-
-  const pod = pods[0]
+  const defaultContainerName = <string | undefined>(
+    get(workload, ["metadata", "annotations", "kubectl.kubernetes.io/default-container"])
+  )
+  const version = get(workload, ["metadata", "annotations", "garden.io/version"])
+  const matchingPod = !defaultContainerName ? undefined : pods.find((p) => p.metadata.name === defaultContainerName)
+  const pod = !matchingPod ? pods[0] : matchingPod
 
   if (!pod) {
     // This should not happen because of the prior status check, but checking to be sure
