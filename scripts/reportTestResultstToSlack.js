@@ -1,0 +1,29 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs_extra_1 = require("fs-extra");
+const request_1 = require("request");
+const testResultsData = (0, fs_extra_1.readFileSync)("report.tmp").toString();
+const testPassed = testResultsData.match(/\ncore     (\d+) passing/);
+const testFailed = testResultsData.match(/\ncore     (\d+) failing/);
+if (!testFailed || !testFailed[1] || !testPassed || !testPassed[1])
+    throw "Failed to read test results";
+const prUrl = process.env.CIRCLE_PULL_REQUEST;
+const branch = process.env.CIRCLE_BRANCH;
+const ciJobUrl = process.env.CIRCLE_BUILD_URL;
+const formattedPrUrl = prUrl ? `\n${prUrl}` : "";
+const formattedBranch = `<https://github.com/garden-io/garden/tree/${branch}|${branch}>`;
+const formattedJob = `<${ciJobUrl}|ci job>`;
+const report = `Unit tests passing ${testPassed[1]}/${parseInt(testFailed[1]) + parseInt(testPassed[1])}
+${formattedJob} | branch: ${formattedBranch}${formattedPrUrl}`;
+const webhookUrl = branch === "0.13" ? process.env.GRAPH_V2_SLACK_WH : process.env.GRAPH_V2_PR_SLACK_WH;
+if (!webhookUrl)
+    throw "webhook URL undefined";
+(0, request_1.post)(webhookUrl, {
+    body: JSON.stringify({ text: report }),
+    headers: { "Content-type": "application/json" },
+}, (err) => {
+    if (err)
+        throw err;
+    console.log("reported to slack; \n", report);
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicmVwb3J0VGVzdFJlc3VsdHN0VG9TbGFjay5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbInJlcG9ydFRlc3RSZXN1bHRzdFRvU2xhY2sudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSx1Q0FBdUM7QUFDdkMscUNBQThCO0FBRTlCLE1BQU0sZUFBZSxHQUFHLElBQUEsdUJBQVksRUFBQyxZQUFZLENBQUMsQ0FBQyxRQUFRLEVBQUUsQ0FBQTtBQUU3RCxNQUFNLFVBQVUsR0FBRyxlQUFlLENBQUMsS0FBSyxDQUFDLDBCQUEwQixDQUFDLENBQUE7QUFDcEUsTUFBTSxVQUFVLEdBQUcsZUFBZSxDQUFDLEtBQUssQ0FBQywwQkFBMEIsQ0FBQyxDQUFBO0FBRXBFLElBQUksQ0FBQyxVQUFVLElBQUksQ0FBQyxVQUFVLENBQUMsQ0FBQyxDQUFDLElBQUksQ0FBQyxVQUFVLElBQUksQ0FBQyxVQUFVLENBQUMsQ0FBQyxDQUFDO0lBQUUsTUFBTSw2QkFBNkIsQ0FBQTtBQUV2RyxNQUFNLEtBQUssR0FBRyxPQUFPLENBQUMsR0FBRyxDQUFDLG1CQUFtQixDQUFBO0FBQzdDLE1BQU0sTUFBTSxHQUFHLE9BQU8sQ0FBQyxHQUFHLENBQUMsYUFBYSxDQUFBO0FBQ3hDLE1BQU0sUUFBUSxHQUFHLE9BQU8sQ0FBQyxHQUFHLENBQUMsZ0JBQWdCLENBQUE7QUFFN0MsTUFBTSxjQUFjLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxLQUFLLEtBQUssRUFBRSxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUE7QUFDaEQsTUFBTSxlQUFlLEdBQUcsNkNBQTZDLE1BQU0sSUFBSSxNQUFNLEdBQUcsQ0FBQTtBQUN4RixNQUFNLFlBQVksR0FBRyxJQUFJLFFBQVEsVUFBVSxDQUFBO0FBRTNDLE1BQU0sTUFBTSxHQUFHLHNCQUFzQixVQUFVLENBQUMsQ0FBQyxDQUFDLElBQUksUUFBUSxDQUFDLFVBQVUsQ0FBQyxDQUFDLENBQUMsQ0FBQyxHQUFDLFFBQVEsQ0FBQyxVQUFVLENBQUMsQ0FBQyxDQUFDLENBQUM7RUFDbkcsWUFBWSxjQUFjLGVBQWUsR0FBRyxjQUFjLEVBQUUsQ0FBQTtBQUU5RCxNQUFNLFVBQVUsR0FBRyxNQUFNLEtBQUssTUFBTSxDQUFDLENBQUMsQ0FBQyxPQUFPLENBQUMsR0FBRyxDQUFDLGlCQUFpQixDQUFDLENBQUMsQ0FBQyxPQUFPLENBQUMsR0FBRyxDQUFDLG9CQUFvQixDQUFBO0FBRXZHLElBQUksQ0FBQyxVQUFVO0lBQUUsTUFBTSx1QkFBdUIsQ0FBQTtBQUU5QyxJQUFBLGNBQUksRUFDRixVQUFVLEVBQ1Y7SUFDRSxJQUFJLEVBQUUsSUFBSSxDQUFDLFNBQVMsQ0FBQyxFQUFFLElBQUksRUFBRSxNQUFNLEVBQUUsQ0FBQztJQUN0QyxPQUFPLEVBQUUsRUFBRSxjQUFjLEVBQUUsa0JBQWtCLEVBQUU7Q0FDaEQsRUFDRCxDQUFDLEdBQUcsRUFBRSxFQUFFO0lBQ04sSUFBSSxHQUFHO1FBQUUsTUFBTSxHQUFHLENBQUE7SUFFbEIsT0FBTyxDQUFDLEdBQUcsQ0FBQyx1QkFBdUIsRUFBRSxNQUFNLENBQUMsQ0FBQTtBQUM5QyxDQUFDLENBQ0YsQ0FBQSJ9
