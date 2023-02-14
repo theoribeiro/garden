@@ -197,22 +197,6 @@ export interface PlaceholderOpts {
   metadata?: LogEntryMetadata
 }
 
-export interface LogNode {
-  silly(params: string | LogEntryParams): void
-  debug(params: string | LogEntryParams): void
-  verbose(params: string | LogEntryParams): void
-  info(params: string | LogEntryParams): void
-  warn(params: string | LogEntryParams): void
-  error(params: string | LogEntryParams): void
-}
-
-function resolveParams(level: LogLevel, params: string | LogEntryParams): CreateLogEntryParams {
-  if (typeof params === "string") {
-    return { msg: params, level }
-  }
-  return { ...params, level }
-}
-
 // TODO @eysi: Rename.
 export class Logger {
   public events: EventBus

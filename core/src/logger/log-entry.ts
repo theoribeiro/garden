@@ -10,7 +10,7 @@ import logSymbols from "log-symbols"
 import nodeEmoji from "node-emoji"
 import { cloneDeep, round } from "lodash"
 
-import { LogLevel, logLevelMap, LogNode } from "./logger"
+import { LogLevel, logLevelMap } from "./logger"
 import { Omit } from "../util/util"
 import { findParentEntry, getAllSections } from "./util"
 import { GardenError } from "../exceptions"
@@ -137,6 +137,7 @@ interface LogEntryBase {
   errorData?: GardenError
   id?: string
   root: Logger
+  parent: Log
 }
 
 // TODO @eysi: Rename to LogEntry
@@ -156,8 +157,7 @@ interface PluginLogEntry extends LogEntryBase {
 }
 
 // TODO @eysi: Rename to Log
-export class Log implements LogNode {
-  private messages: LogEntryMessage[]
+export class Log {
   private metadata?: LogEntryMetadata
   public readonly parent?: Log
   public readonly timestamp: Date
@@ -190,8 +190,6 @@ export class Log implements LogNode {
     this.id = params.id
     this.revision = -1
     this.section = params.section
-
-    this.messages = [{ timestamp: new Date() }]
   }
 
   private createLogEntry(params: CreateLogEntryParams) {
@@ -222,14 +220,6 @@ export class Log implements LogNode {
     }
 
     return logEntry
-    // return new LogEntry({
-    //   ...params,
-    //   indent,
-    //   level,
-    //   metadata,
-    //   root: this.root,
-    //   parent: this,
-    // })
   }
 
   private log(params: CreateLogEntryParams): void {
@@ -306,25 +296,6 @@ export class Log implements LogNode {
     return this.metadata
   }
 
-  getMessages() {
-    return this.messages
-  }
-
-  /**
-   * Returns a deep copy of the latest message, if availble.
-   * Otherwise returns an empty object of type LogEntryMessage for convenience.
-   */
-  getLatestMessage() {
-    if (!this.messages) {
-      return <LogEntryMessage>{}
-    }
-
-    // Use spread operator to clone the array
-    const message = [...this.messages][this.messages.length - 1]
-    // ...and the object itself
-    return { ...message }
-  }
-
   placeholder({
     level = LogLevel.info,
     childEntriesInheritLevel = false,
@@ -386,14 +357,6 @@ export class Log implements LogNode {
    */
   getStringLevel(): string {
     return logLevelMap[this.level]
-  }
-
-  /**
-   * Get the full list of sections including all parent entries.
-   */
-  getAllSections(): string[] {
-    const msg = this.getLatestMessage()
-    return msg ? getAllSections(this, msg) : []
   }
 
   /**
