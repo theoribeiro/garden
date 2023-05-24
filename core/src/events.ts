@@ -226,6 +226,8 @@ export interface Events {
   configGraph: { graph: ConfigGraph }
   configsScanned: {}
 
+  autocompleterUpdated: { projectRoot: string }
+
   // Command/project metadata events
   commandInfo: CommandInfoPayload
 
@@ -338,7 +340,7 @@ export interface Events {
 export type EventName = keyof Events
 
 type GraphEventName = Extract<EventName, "taskCancelled" | "taskComplete" | "taskError" | "taskProcessing">
-type ConfigEventName = Extract<EventName, "configChanged" | "configsScanned">
+type ConfigEventName = Extract<EventName, "configChanged" | "configsScanned" | "autocompleterUpdated">
 
 // These are the events we POST over https via the BufferedEventStream
 const pipedEventNamesSet = new Set<EventName>([
@@ -375,7 +377,7 @@ const pipedEventNamesSet = new Set<EventName>([
 
 // We send graph and config events over a websocket connection via the Garden server
 const taskGraphEventNames = new Set<GraphEventName>(["taskCancelled", "taskComplete", "taskError", "taskProcessing"])
-const configEventNames = new Set<ConfigEventName>(["configsScanned", "configChanged"])
+const configEventNames = new Set<ConfigEventName>(["configsScanned", "configChanged", "autocompleterUpdated"])
 
 // We do not emit these task graph events because they're simply not needed, and there's a lot of them.
 const skipTaskGraphEventTypes = ["resolve-action", "resolve-provider"]
@@ -393,11 +395,14 @@ const isTaskGraphEvent = (name: string, _payload: any): _payload is Events[Graph
 }
 
 export function shouldStreamWsEvent(name: string, payload: any) {
-  if (isTaskGraphEvent(name, payload) && !skipTaskGraphEventTypes.includes(payload.type)) {
+  const gardenKey = payload?.$context?.gardenKey
+
+  if (isTaskGraphEvent(name, payload) && !skipTaskGraphEventTypes.includes(payload.type) && gardenKey) {
     return true
   } else if (isConfigEvent(name, payload)) {
     return true
   }
+
   return false
 }
 
