@@ -25,7 +25,7 @@ import { pathExists } from "fs-extra"
 import type { ProjectConfig, ProjectResource } from "../config/project"
 import { findProjectConfig } from "../config/base"
 import type { GlobalConfigStore } from "../config-store/global"
-import { getGardenCloudDomain } from "../cloud/api"
+import { CloudApi, getGardenCloudDomain } from "../cloud/api"
 import type { ParsedArgs } from "minimist"
 import type { ServeCommand } from "../commands/serve"
 import { uuidv4 } from "../util/random"
@@ -459,11 +459,15 @@ export async function getGardenForRequest({
   environmentString?: string
   sessionId: string
 }) {
-  const cloudApi = await manager.getCloudApi({
-    log,
-    cloudDomain: getGardenCloudDomain(projectConfig.domain),
-    globalConfigStore,
-  })
+  let cloudApi: CloudApi | undefined
+
+  if (!command?.noProject) {
+    cloudApi = await manager.getCloudApi({
+      log,
+      cloudDomain: getGardenCloudDomain(projectConfig.domain),
+      globalConfigStore,
+    })
+  }
 
   const gardenOpts: GardenOpts = {
     cloudApi,
@@ -472,6 +476,7 @@ export async function getGardenForRequest({
     environmentString: opts.env || environmentString || manager.defaultEnv,
     globalConfigStore,
     log,
+    monitors: manager.monitors,
     variableOverrides: parseCliVarFlags(opts.var),
     sessionId,
   }
