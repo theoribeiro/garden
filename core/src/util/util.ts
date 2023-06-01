@@ -661,7 +661,7 @@ export async function runScript({
   proc.stdout!.pipe(stdout)
   proc.stderr!.pipe(stderr)
 
-  await proc
+  return await proc
 }
 
 export async function streamToString(stream: Readable) {
