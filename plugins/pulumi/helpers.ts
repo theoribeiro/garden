@@ -108,10 +108,10 @@ export async function previewStack(
   const configPath = await applyConfig({ ...params, previewDirPath })
   const planPath = previewDirPath
     ? // Then we're running `garden plugins pulumi preview`, so we write the plan to the preview dir regardless of
-      // whether the module is configured to deploy from a preview or not.
-      join(previewDirPath, getPlanFileName(module, ctx.environmentName))
+    // whether the module is configured to deploy from a preview or not.
+    join(previewDirPath, getPlanFileName(module, ctx.environmentName))
     : // Then we use the cache dir or preview dir, depending on the provider and module configuration.
-      getPlanPath(ctx, module)
+    getPlanPath(ctx, module)
   const res = await pulumi(ctx, provider).exec({
     log,
     // We write the plan to the `.garden` directory for subsequent use by the deploy handler.
@@ -206,12 +206,16 @@ export async function getStackVersionTag({ log, ctx, provider, module }: PulumiP
 
 // TODO: Use REST API instead of calling the CLI here.
 export async function clearStackVersionTag({ log, ctx, provider, module }: PulumiParams): Promise<void> {
-  await pulumi(ctx, provider).stdout({
-    log,
-    args: ["stack", "tag", "rm", stackVersionKey],
-    env: ensureEnv({ log, ctx, provider, module }),
-    cwd: getModuleStackRoot(module),
-  })
+  try {
+    await pulumi(ctx, provider).stdout({
+      log,
+      args: ["stack", "tag", "rm", stackVersionKey],
+      env: ensureEnv({ log, ctx, provider, module }),
+      cwd: getModuleStackRoot(module),
+    })
+  } catch (err) {
+    log.debug(err.message)
+  }
 }
 
 export function getStackName(module: PulumiModule): string {
