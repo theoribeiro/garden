@@ -38,7 +38,7 @@ import { kebabCase, mapKeys } from "lodash"
 // To reduce the amount of edits to make before removing module configs
 export * from "./config"
 
-interface ContainerModuleVolumeSpec extends ContainerVolumeSpecBase {
+export interface ContainerModuleVolumeSpec extends ContainerVolumeSpecBase {
   module?: string
 }
 

@@ -16,6 +16,8 @@ import {
   ContainerActionConfig,
   ContainerBuildActionConfig,
   ContainerModule,
+  ContainerModuleVolumeSpec,
+  ContainerVolumeSpec,
   containerModuleOutputsSchema,
   containerModuleSpecSchema,
   defaultDockerfileName,
@@ -234,14 +236,17 @@ function convertContainerModuleRuntimeActions(
       spec: {
         ...omit(service.spec, ["name", "dependencies", "disabled"]),
         image: deploymentImageId,
-        volumes: [], // added later
+        volumes: convertModuleVolumeSpec(service.spec.volumes), // added later
       },
     }
-    action.spec.volumes = service.config.spec.volumes.map((v) => ({
+    actions.push(action)
+  }
+
+  function convertModuleVolumeSpec(moduleVolumeSpec: ContainerModuleVolumeSpec[]): ContainerVolumeSpec[] {
+    return moduleVolumeSpec.map((v) => ({
       ...omit(v, "module"),
       action: v.module ? { kind: "Deploy", name: v.module } : undefined,
     }))
-    actions.push(action)
   }
 
   for (const task of tasks) {
@@ -259,6 +264,7 @@ function convertContainerModuleRuntimeActions(
       spec: {
         ...omit(task.spec, ["name", "dependencies", "disabled", "timeout"]),
         image: needsContainerBuild ? undefined : module.spec.image,
+        volumes: convertModuleVolumeSpec(task.spec.volumes), // added later
       },
     })
   }
@@ -278,6 +284,7 @@ function convertContainerModuleRuntimeActions(
       spec: {
         ...omit(test.spec, ["name", "dependencies", "disabled", "timeout"]),
         image: needsContainerBuild ? undefined : module.spec.image,
+        volumes: convertModuleVolumeSpec(test.spec.volumes), // added later
       },
     })
   }
@@ -360,7 +367,7 @@ export const gardenPlugin = () =>
             async getOutputs({ action }) {
               // TODO: figure out why this cast is needed here
               return {
-                outputs: (getContainerBuildActionOutputs(action) as unknown) as DeepPrimitiveMap,
+                outputs: getContainerBuildActionOutputs(action) as unknown as DeepPrimitiveMap,
               }
             },
 
@@ -559,8 +566,7 @@ export const gardenPlugin = () =>
           {
             platform: "windows",
             architecture: "amd64",
-            url:
-              "https://github.com/rgl/docker-ce-windows-binaries-vagrant/releases/download/v20.10.9/docker-20.10.9.zip",
+            url: "https://github.com/rgl/docker-ce-windows-binaries-vagrant/releases/download/v20.10.9/docker-20.10.9.zip",
             sha256: "360ca42101d453022eea17747ae0328709c7512e71553b497b88b7242b9b0ee4",
             extract: {
               format: "zip",
