@@ -726,7 +726,7 @@ jobs:
             GARDEN_SKIP_TESTS="<<parameters.skipTests>>" yarn _integ
       - run:
           name: Deploy demo-project
-          command: sudo -E ./bin/garden deploy --root examples/demo-project
+          command: ./bin/garden deploy --root examples/demo-project
 
   test-macos:
     macos:
