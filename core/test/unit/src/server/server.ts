@@ -59,6 +59,7 @@ describe("GardenServer", () => {
       extraCommands: [new TestCommand()],
       defaultOpts: { plugins: [...testPlugins()] },
       force: true,
+      plugins: [],
     })
     manager.set(garden.log, garden)
     gardenEnv.GARDEN_SERVER_HOSTNAME = hostname
