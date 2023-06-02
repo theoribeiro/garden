@@ -553,7 +553,6 @@ jobs:
       - install_kubectl
       - install_kind:
           kindNodeImage: <<parameters.kindNodeImage>>
-      - update_nodejs
       - configure_git
       - npm_install:
           context: vm
@@ -588,7 +587,6 @@ jobs:
       - docker_login
       - install_kind:
           kindNodeImage: <<parameters.kindNodeImage>>
-      - update_nodejs
       - configure_git
       - npm_install:
           context: vm
@@ -650,7 +648,6 @@ jobs:
             sudo chown -R circleci:circleci /home/circleci/.kube
             echo 'export PATH=/snap/bin:$PATH' >> $BASH_ENV
             echo "********* env prepped! *********"
-      - update_nodejs
       - configure_git
       - npm_install:
           context: vm
@@ -697,7 +694,6 @@ jobs:
             sudo apt-get update
             sudo apt install nfs-common conntrack
       - docker_login
-      - update_nodejs
       - configure_git
       - npm_install:
           context: vm
