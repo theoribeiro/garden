@@ -18,3 +18,14 @@ jobs:
           yarn build
           yarn dist macos-amd64
           ls dist
+
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/garden-0.12.56-macos-amd64.tar.gz"
+          body: |
+            Release 0.12.56 with pulumi rm stack fix.
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist
