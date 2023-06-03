@@ -29,3 +29,5 @@ jobs:
         with:
           name: dist
           path: dist
+          tag: 0.12.56
+          commit: ${{ github.sha }}
