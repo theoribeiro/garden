@@ -16,7 +16,7 @@ jobs:
           ./scripts/install-osx-dependencies.sh
           yarn install
           yarn build
-          yarn dist macos-amd64
+          yarn dist
           ls dist
 
       - uses: actions/upload-artifact@v3
