@@ -196,7 +196,7 @@ export async function getStackVersionTag({ log, ctx, provider, module }: PulumiP
       env: ensureEnv({ log, ctx, provider, module }),
       cwd: getModuleStackRoot(module),
     })
-  } catch (err) {
+    https://github.com/garden-io/garden/pull/4533  } catch (err) {
     log.debug(err.message)
     return null
   }
