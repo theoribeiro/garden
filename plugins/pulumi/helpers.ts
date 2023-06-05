@@ -107,11 +107,8 @@ export async function previewStack(
 
   const configPath = await applyConfig({ ...params, previewDirPath })
   const planPath = previewDirPath
-    ? // Then we're running `garden plugins pulumi preview`, so we write the plan to the preview dir regardless of
-    // whether the module is configured to deploy from a preview or not.
-    join(previewDirPath, getPlanFileName(module, ctx.environmentName))
-    : // Then we use the cache dir or preview dir, depending on the provider and module configuration.
-    getPlanPath(ctx, module)
+    ? join(previewDirPath, getPlanFileName(module, ctx.environmentName))
+    : getPlanPath(ctx, module)
   const res = await pulumi(ctx, provider).exec({
     log,
     // We write the plan to the `.garden` directory for subsequent use by the deploy handler.
