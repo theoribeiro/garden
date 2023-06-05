@@ -11,15 +11,12 @@ jobs:
           node-version: 18.x
           cache: yarn
 
-      - uses: docker-practice/actions-setup-docker@master
-        timeout-minutes: 12
-
       - name: Build package
         run: |
           ./scripts/install-osx-dependencies.sh
           yarn install
           yarn build
-          yarn dist
+          yarn dist macos-amd64 linux-amd64
           ls dist
 
       - uses: actions/upload-artifact@v3
@@ -29,7 +26,7 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "dist/garden-0.12.56-macos-amd64.tar.gz"
+          artifacts: "dist/garden-0.12.56-macos-amd64.tar.gz,dist/garden-0.12.56-linux-amd64.tar.gz"
           body: |
             Release 0.12.56 with pulumi rm stack fix.
           tag: 0.12.56
